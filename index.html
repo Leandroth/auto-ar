@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Auto a escala real – Realidad aumentada</title>
+<meta name="theme-color" content="#1b2430">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<style>
+  :root{--acc:#e3262b;--bg:#1b2430;--card:#ffffff}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Roboto,"Segoe UI",sans-serif;background:var(--bg);color:#222}
+  header{color:#fff;padding:14px 16px 8px}
+  header h1{margin:0;font-size:1.25rem}
+  header p{margin:4px 0 0;font-size:.9rem;opacity:.8}
+  model-viewer{width:100%;height:58vh;min-height:340px;background:linear-gradient(#dfe6ee,#f6f7f9);--poster-color:transparent}
+  .ar-btn{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:var(--acc);color:#fff;border:0;
+    border-radius:40px;padding:16px 28px;font-size:1.15rem;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.35);white-space:nowrap}
+  .ar-btn:active{transform:translateX(-50%) scale(.97)}
+  .toggle{display:flex;gap:8px;padding:12px 16px;background:#fff}
+  .toggle button{flex:1;border:2px solid var(--acc);background:#fff;color:var(--acc);border-radius:10px;padding:10px 6px;font-weight:700;font-size:.95rem}
+  .toggle button.on{background:var(--acc);color:#fff}
+  main{padding:0 12px 24px}
+  .card{background:var(--card);border-radius:14px;padding:14px 16px;margin-top:12px}
+  .card h2{margin:0 0 8px;font-size:1.05rem}
+  table{width:100%;border-collapse:collapse;font-size:.95rem}
+  td{padding:5px 0;border-bottom:1px solid #eee} td:last-child{text-align:right;font-weight:700}
+  ol{margin:0;padding-left:20px;line-height:1.5}
+  .alt{display:block;text-align:center;background:#1b2430;color:#fff;text-decoration:none;border-radius:10px;padding:12px;font-weight:700;margin-top:8px}
+  .note{font-size:.82rem;color:#555;margin-top:8px}
+  .sv-small{display:block;text-align:center;background:#fff;color:#1a56b8;font-size:.9rem;font-weight:600;padding:10px 12px 2px;text-decoration:underline}
+  #status{display:none;background:#fff3cd;color:#664d03;padding:10px 16px;font-size:.9rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Auto a escala real 1:1</h1>
+  <p>Mirá el auto en tu garage con su tamaño exacto</p>
+</header>
+
+<div id="status"></div>
+
+<model-viewer id="mv"
+  src="auto.glb?v=3"
+  alt="Modelo 3D del auto a escala real"
+  ar ar-modes="scene-viewer webxr quick-look" ar-scale="fixed" ar-placement="floor"
+  camera-controls touch-action="pan-y" shadow-intensity="1" shadow-softness="0.8"
+  camera-orbit="35deg 70deg auto" exposure="1" loading="eager">
+  <button slot="ar-button" class="ar-btn">📱 Ver en mi espacio (RA)</button>
+</model-viewer>
+
+<a class="sv-small" id="svQuick" href="#">Si no funciona: abrir directo en Google</a>
+<div class="toggle">
+  <button id="bCar" class="on">Solo el auto</button>
+  <button id="bFrame">Auto + marco del garage</button>
+</div>
+
+<main>
+  <div class="card">
+    <h2>Medidas del auto (modelo a escala real)</h2>
+    <table>
+      <tr><td>Largo</td><td>4,343 m</td></tr>
+      <tr><td>Ancho sin espejos</td><td>1,821 m</td></tr>
+      <tr><td>Ancho con espejos</td><td>2,014 m</td></tr>
+      <tr><td>Alto</td><td>1,585 m</td></tr>
+      <tr><td>Distancia entre ejes</td><td>2,645 m</td></tr>
+    </table>
+    <p class="note" id="frameNote" style="display:none">Marco rojo en el piso: garage de <b>4,55 m × 2,43 m</b>. El auto queda centrado a lo ancho y con la cola a 10 cm de la reja.</p>
+  </div>
+
+  <div class="card">
+    <h2>Cómo usarlo</h2>
+    <ol>
+      <li>Tocá <b>“Ver en mi espacio (RA)”</b> y dale permiso a la cámara.</li>
+      <li>Apuntá el teléfono al <b>piso</b> y movelo despacio de lado a lado hasta que detecte la superficie.</li>
+      <li>Tocá el piso para ubicar el auto. Podés arrastrarlo y girarlo con dos dedos; el <b>tamaño queda fijo</b> (no se puede agrandar ni achicar).</li>
+      <li><b>Caminá alrededor</b> del auto para ver cuánto espacio queda a cada lado.</li>
+    </ol>
+    <p class="note">Consejo: buena luz y un piso con algo de textura ayudan a que el teléfono lo detecte mejor.</p>
+  </div>
+
+  <div class="card">
+    <h2>¿No se abre la RA?</h2>
+    <a class="alt" id="svLink" href="#">Abrir directo en Google Scene Viewer (escala fija)</a>
+    <p class="note">Requiere un Android compatible con ARCore, <a href="https://play.google.com/store/apps/details?id=com.google.ar.core">“Servicios de Google Play para RA”</a> actualizado, la app de Google y Chrome. En iPhone se abre con AR Quick Look.</p>
+  </div>
+</main>
+
+<script>
+  const mv = document.getElementById('mv');
+  const files = {car:'auto.glb?v=3', frame:'auto_marco_garage.glb?v=3'};
+  const BASE = new URL('./', location.href.split('#')[0].split('?')[0]).href;
+  const PLAY_AR = 'https://play.google.com/store/apps/details?id=com.google.ar.core';
+  let current = 'car';
+  const abs = f => new URL(f, location.href).href;
+  function svIntent(file){
+    const glb = BASE + file;
+    const fallback = BASE;
+    return 'intent://arvr.google.com/scene-viewer/1.2?file=' + encodeURIComponent(glb) +
+      '&mode=ar_preferred&resizable=false&title=' + encodeURIComponent('Auto a escala real') +
+      '#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=' +
+      encodeURIComponent(fallback) + ';end;';
+  }
+  function setModel(k){
+    current = k; mv.src = files[k];
+    document.getElementById('bCar').classList.toggle('on', k==='car');
+    document.getElementById('bFrame').classList.toggle('on', k==='frame');
+    document.getElementById('frameNote').style.display = k==='frame' ? 'block' : 'none';
+    document.getElementById('svLink').href = svIntent(files[k]);
+    document.getElementById('svQuick').href = svIntent(files[k]);
+    mv.cameraOrbit = k==='frame' ? '35deg 55deg auto' : '35deg 70deg auto';
+  }
+  document.getElementById('bCar').onclick = () => setModel('car');
+  document.getElementById('bFrame').onclick = () => setModel('frame');
+  setModel('car');
+  const st = document.getElementById('status');
+  mv.addEventListener('ar-status', e => {
+    if (e.detail.status === 'failed') { st.style.display='block'; st.innerHTML = 'No se pudo iniciar la realidad aumentada. Instalá o actualizá <a href="'+PLAY_AR+'">Servicios de Google Play para RA</a> (y la app de Google), y probá con <b>“Si no funciona: abrir directo en Google”</b>.'; window.scrollTo(0,0); }
+  });
+  mv.addEventListener('load', () => {
+    setTimeout(() => { if (!mv.canActivateAR && /Android/i.test(navigator.userAgent)) {
+      st.style.display='block'; st.textContent='Este navegador no reporta soporte de RA. Usá Chrome en Android o el botón de Scene Viewer de abajo.'; } }, 800);
+  });
+</script>
+</body>
+</html>
